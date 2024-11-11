@@ -1,7 +1,7 @@
 /*
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2023, Giacomo Franchini
+ *  Copyright (c) 2024, PickNik Robotics
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,8 @@
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef FUSE_MODELS__ODOMETRY_3D_HPP_
-#define FUSE_MODELS__ODOMETRY_3D_HPP_
+#ifndef FUSE_MODELS__TRANSFORM_SENSOR_HPP_
+#define FUSE_MODELS__TRANSFORM_SENSOR_HPP_
 
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
@@ -40,7 +40,7 @@
 #include <memory>
 #include <string>
 
-#include <fuse_models/parameters/odometry_3d_params.hpp>
+#include <fuse_models/parameters/transform_sensor_params.hpp>
 #include <fuse_core/throttled_callback.hpp>
 
 #include <fuse_core/async_sensor_model.hpp>
@@ -48,64 +48,52 @@
 
 #include <geometry_msgs/msg/pose_with_covariance_stamped.hpp>
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
-#include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/imu.hpp>
+#include "tf2_msgs/msg/tf_message.hpp"
 
 namespace fuse_models
 {
 
 /**
- * @brief An adapter-type sensor that produces pose (relative or absolute) and velocity constraints
- *        from sensor data published by another node
+ * @brief An adapter-type sensor that produces pose constraints from published transforms
  *
- * This sensor subscribes to a nav_msgs::msg::Odometry topic and:
- * 1. Creates relative or absolute pose variables and constraints. If the \p differential parameter
- *    is set to false (the default), the  measurement will be treated as an absolute constraint. If
- *    it is set to true, consecutive measurements will be used to generate relative pose
- *    constraints.
- * 2. Creates 3D velocity variables and constraints.
- *
- * This sensor really just separates out the pose and twist components of the message, and processes
- * them just like the Pose3D and Twist3D classes.
+ * This sensor subscribes to a MessageType topic and creates orientation and pose variables and constraints.
+ * This sensor can be used for AprilTags or any pose for which the transform to the desired state estimation frame is
+ * known. For an example, try `ros2 launch fuse_tutorials fuse_apriltag_tutorial.launch.py` and see its relevant files.
  *
  * Parameters:
  *  - device_id (uuid string, default: 00000000-0000-0000-0000-000000000000) The device/robot ID to
  *                                                                           publish
  *  - device_name (string) Used to generate the device/robot ID if the device_id is not provided
- *  - queue_size (int, default: 10) The subscriber queue size for the pose messages
- *  - topic (string) The topic to which to subscribe for the pose messages
- *  - differential (bool, default: false) Whether we should fuse measurements absolutely, or to
- *                                        create relative pose constraints using consecutive
- *                                        measurements.
- *  - pose_target_frame (string) Pose data will be transformed into this frame before it is fused.
- *                               This frame should be a world-fixed frame, typically 'odom' or
- *                               'map'.
- *  - twist_target_frame (string) Twist/velocity data will be transformed into this frame before it
- *                                is fused. This frame should be a body-relative frame, typically
- *                                'base_link'.
+ *  - queue_size (int, default: 10) The subscriber queue size for the transform messages
+ *  - topic (string) The topic to which to subscribe for the transform messages
+ *  - target_frame (string) the state estimation frame to transform tfs to
  *
  * Subscribes:
- *  - \p topic (nav_msgs::msg::Odometry) Odometry information at a given timestep
+ *  - \p topic (MessageType) IMU data at a given timestep
  */
-class Odometry3D : public fuse_core::AsyncSensorModel
+class TransformSensor : public fuse_core::AsyncSensorModel
 {
 public:
-  FUSE_SMART_PTR_DEFINITIONS(Odometry3D)
-  using ParameterType = parameters::Odometry3DParams;
+  FUSE_SMART_PTR_DEFINITIONS(TransformSensor)
+  using ParameterType = parameters::TransformSensorParams;
+  using MessageType = tf2_msgs::msg::TFMessage;
 
   /**
    * @brief Default constructor
    */
-  Odometry3D();
+  TransformSensor();
 
   /**
    * @brief Destructor
    */
-  virtual ~Odometry3D() = default;
-  Odometry3D(Odometry3D const&) = delete;
-  Odometry3D(Odometry3D&&) = delete;
-  Odometry3D& operator=(Odometry3D const&) = delete;
-  Odometry3D& operator=(Odometry3D&&) = delete;
+  virtual ~TransformSensor() = default;
+
+  TransformSensor(TransformSensor const&) = delete;
+  TransformSensor(TransformSensor&&) = delete;
+  TransformSensor& operator=(TransformSensor const&) = delete;
+  TransformSensor& operator=(TransformSensor&&) = delete;
 
   /**
    * @brief Shadowing extension to the AsyncSensorModel::initialize call
@@ -114,10 +102,10 @@ public:
                   const std::string& name, fuse_core::TransactionCallback transaction_callback) override;
 
   /**
-   * @brief Callback for pose messages
-   * @param[in] msg - The pose message to process
+   * @brief Callback for tf messages
+   * @param[in] msg - The IMU message to process
    */
-  void process(const nav_msgs::msg::Odometry& msg);
+  void process(const MessageType& msg);
 
 protected:
   fuse_core::UUID device_id_;  //!< The UUID of this device
@@ -142,19 +130,6 @@ protected:
    */
   void onStop() override;
 
-  /**
-   * @brief Process a pose message in differential mode
-   *
-   * @param[in] pose - The pose message to process in differential mode
-   * @param[in] twist - The twist message used in case the twist covariance is used in differential
-   *                    mode
-   * @param[in] validate - Whether to validate the pose and twist coavriance or not
-   * @param[out] transaction - The generated variables and constraints are added to this transaction
-   */
-  void processDifferential(const geometry_msgs::msg::PoseWithCovarianceStamped& pose,
-                           const geometry_msgs::msg::TwistWithCovarianceStamped& twist, bool validate,
-                           fuse_core::Transaction& transaction);
-
   fuse_core::node_interfaces::NodeInterfaces<fuse_core::node_interfaces::Base, fuse_core::node_interfaces::Clock,
                                              fuse_core::node_interfaces::Logging,
                                              fuse_core::node_interfaces::Parameters, fuse_core::node_interfaces::Topics,
@@ -166,18 +141,15 @@ protected:
 
   ParameterType params_;
 
-  geometry_msgs::msg::PoseWithCovarianceStamped::UniquePtr previous_pose_;
-
-  // NOTE(CH3): Unique ptr to defer till we have the node interfaces from initialize()
   std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
   std::unique_ptr<tf2_ros::TransformListener> tf_listener_;
 
-  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr sub_;
+  rclcpp::Subscription<MessageType>::SharedPtr sub_;
 
-  using OdometryThrottledCallback = fuse_core::ThrottledMessageCallback<nav_msgs::msg::Odometry>;
-  OdometryThrottledCallback throttled_callback_;
+  using AprilTagThrottledCallback = fuse_core::ThrottledMessageCallback<MessageType>;
+  AprilTagThrottledCallback throttled_callback_;
 };
 
 }  // namespace fuse_models
 
-#endif  // FUSE_MODELS__ODOMETRY_3D_HPP_
+#endif  // FUSE_MODELS__TRANSFORM_SENSOR_HPP_
