@@ -38,6 +38,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <fstream>
 
 #include <boost/iterator/transform_iterator.hpp>
 #include <boost/serialization/export.hpp>
@@ -451,6 +452,54 @@ void HashGraph::print(std::ostream& stream) const
     stream << "   - " << *variable.second << "\n"
            << "     on_hold: " << std::boolalpha << is_on_hold << "\n";
   }
+}
+
+void HashGraph::graphviz(const std::string& output_path) const
+{
+  std::fstream graph_dot;
+  graph_dot.open(output_path, std::fstream::in | std::fstream::out | std::fstream::trunc);
+  graph_dot << "graph { ";
+
+  for (const auto& constraint : constraints_)
+  {
+    if (constraint.second->variables().size() == 1)
+    {
+      std::string variable_uuid = boost::uuids::to_string(constraint.second->variables()[0]);
+      variable_uuid.erase(std::remove(variable_uuid.begin(), variable_uuid.end(), '-'), variable_uuid.end());
+      graph_dot << "init -- \"" << variable_uuid << "\"";
+
+      std::string constraint_uuid = boost::uuids::to_string(constraint.second->uuid());
+      constraint_uuid.erase(std::remove(constraint_uuid.begin(), constraint_uuid.end(), '-'), constraint_uuid.end());
+      graph_dot << " [label=\"" + constraint_uuid + "(" + constraint.second->source() + ")\"]; ";
+    }
+    else if (constraint.second->variables().size() == 2)
+    {
+      std::string variable_uuid_0 = boost::uuids::to_string(constraint.second->variables()[0]);
+      variable_uuid_0.erase(std::remove(variable_uuid_0.begin(), variable_uuid_0.end(), '-'), variable_uuid_0.end());
+      std::string variable_uuid_1 = boost::uuids::to_string(constraint.second->variables()[1]);
+      variable_uuid_1.erase(std::remove(variable_uuid_1.begin(), variable_uuid_1.end(), '-'), variable_uuid_1.end());
+      graph_dot << "\"" << variable_uuid_0 << "\" -- \"" << variable_uuid_1 << "\"";
+
+      std::string constraint_uuid = boost::uuids::to_string(constraint.second->uuid());
+      constraint_uuid.erase(std::remove(constraint_uuid.begin(), constraint_uuid.end(), '-'), constraint_uuid.end());
+      graph_dot << " [label=\"" + constraint_uuid + "(" + constraint.second->source() + ")\"]; ";
+    }
+    else
+    {
+      std::string constraint_name = boost::uuids::to_string(constraint.second->uuid());
+      constraint_name.erase(std::remove(constraint_name.begin(), constraint_name.end(), '-'), constraint_name.end());
+      constraint_name = "\"" + constraint_name + "(" + constraint.second->source() + ")\"";
+      for (const auto& variable : variables_)
+      {
+        std::string variable_uuid = boost::uuids::to_string(variable.second->uuid());
+        variable_uuid.erase(std::remove(variable_uuid.begin(), variable_uuid.end(), '-'), variable_uuid.end());
+        graph_dot << constraint_name << " -- \"" << variable_uuid << "\"; ";
+      }
+    }
+  }
+
+  graph_dot << "}";
+  graph_dot.close();
 }
 
 void HashGraph::createProblem(ceres::Problem& problem) const
