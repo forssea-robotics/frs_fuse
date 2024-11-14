@@ -56,6 +56,7 @@ add_library(
   src/transaction.cpp
   src/transform_sensor.cpp
   src/twist_2d.cpp
+  src/twist_3d.cpp
   src/unicycle_2d.cpp
   src/unicycle_2d_ignition.cpp
   src/unicycle_2d_state_kinematic_constraint.cpp
