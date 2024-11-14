@@ -382,6 +382,11 @@ public:
    */
   void print(std::ostream& stream = std::cout) const override;
 
+  /**
+   * @brief Create a graphviz (.dot) file to get a visual description of the graph.
+   */
+  void graphviz(const std::string& output_path = "./graph.dot") const override;
+
 protected:
   // Define some helpful typedefs
   using Constraints = std::unordered_map<fuse_core::UUID, fuse_core::Constraint::SharedPtr, fuse_core::uuid::hash>;

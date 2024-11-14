@@ -457,6 +457,11 @@ public:
   virtual void print(std::ostream& stream = std::cout) const = 0;
 
   /**
+   * @brief Create a graphviz (.dot) file to get a visual description of the graph.
+   */
+  virtual void graphviz(const std::string& output_path) const = 0;
+
+  /**
    * @brief Serialize this graph into the provided binary archive
    *
    * This can/should be implemented as follows in all derived classes:
