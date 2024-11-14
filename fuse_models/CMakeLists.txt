@@ -33,7 +33,7 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 # find_package(mujoco REQUIRED)
 
-find_package(Ceres REQUIRED)
+find_package(Ceres 2.2.0 REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 # ##############################################################################
