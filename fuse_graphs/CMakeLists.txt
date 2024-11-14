@@ -16,7 +16,7 @@ find_package(fuse_core REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 
-find_package(Ceres REQUIRED)
+find_package(Ceres 2.2.0 REQUIRED)
 
 include(boost-extras.cmake)
 
