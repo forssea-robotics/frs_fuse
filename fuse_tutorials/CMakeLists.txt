@@ -19,6 +19,7 @@ find_package(fuse_variables REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 # ##############################################################################
 # Build ##
@@ -39,7 +40,8 @@ target_link_libraries(
          fuse_variables::fuse_variables
          ${nav_msgs_TARGETS}
          rclcpp::rclcpp
-         ${sensor_msgs_TARGETS})
+         ${sensor_msgs_TARGETS}
+         ${geometry_msgs_TARGETS})
 
 # tutorial_sim executable
 add_executable(range_sensor_simulator src/range_sensor_simulator.cpp)
@@ -81,6 +83,7 @@ ament_export_dependencies(
   fuse_variables
   nav_msgs
   rclcpp
-  sensor_msgs)
+  sensor_msgs
+  geometry_msgs)
 
 ament_package()

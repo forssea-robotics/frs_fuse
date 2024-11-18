@@ -43,6 +43,7 @@
 #include <fuse_core/util.hpp>
 #include <fuse_msgs/srv/set_pose.hpp>
 #include <nav_msgs/msg/odometry.hpp>
+#include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
@@ -54,10 +55,11 @@ constexpr char baselinkFrame[] = "base_link";  //!< The base_link frame id used 
                                                //!< publishing sensor data
 constexpr char mapFrame[] = "map";             //!< The map frame id used when publishing ground truth
                                                //!< data
-constexpr double imuSigma = 0.1;               //!< Std dev of simulated Imu measurement noise
+constexpr double imuSigma = 0.001;               //!< Std dev of simulated Imu measurement noise
 constexpr char odomFrame[] = "odom";           //!< The odom frame id used when publishing wheel
-constexpr double odomPositionSigma = 0.5;      //!< Std dev of simulated odom position measurement noise
-constexpr double odomOrientationSigma = 0.1;   //!< Std dev of simulated odom orientation measurement noise
+constexpr double odomPositionSigma = 0.05;      //!< Std dev of simulated odom position measurement noise
+constexpr double odomOrientationSigma = 0.001;   //!< Std dev of simulated odom orientation measurement noise
+constexpr double twistLinearSigma = 0.001;       //!< Std dev of simulated twist measurement noise
 }  // namespace
 
 /**
@@ -229,6 +231,26 @@ nav_msgs::msg::Odometry simulateOdometry(const Robot& robot)
   return msg;
 }
 
+geometry_msgs::msg::TwistWithCovarianceStamped simulateTwist(const Robot& robot)
+{
+  static std::random_device rd{};
+  static std::mt19937 generator{ rd() };
+  static std::normal_distribution<> twist_noise{ 0.0, twistLinearSigma };
+
+  geometry_msgs::msg::TwistWithCovarianceStamped msg;
+  msg.header.stamp = robot.stamp;
+  msg.header.frame_id = mapFrame;
+
+  // noisy position measurement
+  msg.twist.twist.linear.x = robot.vx + twist_noise(generator);
+  msg.twist.twist.linear.y = robot.vy + twist_noise(generator);
+  msg.twist.twist.linear.z = robot.vz + twist_noise(generator);
+  msg.twist.covariance[0] = twistLinearSigma * twistLinearSigma;
+  msg.twist.covariance[7] = twistLinearSigma * twistLinearSigma;
+  msg.twist.covariance[14] = twistLinearSigma * twistLinearSigma;
+  return msg;
+}
+
 void initializeStateEstimation(fuse_core::node_interfaces::NodeInterfaces<ALL_FUSE_CORE_NODE_INTERFACES> interfaces,
                                const Robot& state, const rclcpp::Clock::SharedPtr& clock, const rclcpp::Logger& logger)
 {
@@ -289,6 +311,7 @@ int main(int argc, char** argv)
   // create our sensor publishers
   auto imu_publisher = node->create_publisher<sensor_msgs::msg::Imu>("imu", 1);
   auto odom_publisher = node->create_publisher<nav_msgs::msg::Odometry>("odom", 1);
+  auto twist_publisher = node->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>("twist", 1);
 
   // create the ground truth publisher
   auto ground_truth_publisher = node->create_publisher<nav_msgs::msg::Odometry>("ground_truth", 1);
@@ -300,7 +323,7 @@ int main(int argc, char** argv)
 
   // you can modify the rate at which this loop runs to see the different performance of the estimator and the effect of
   // integration inaccuracy on the ground truth
-  auto rate = rclcpp::Rate(100.0);
+  auto rate = rclcpp::Rate(10.0);
 
   // normally we would have to initialize the state estimation, but we included an ignition 'sensor' in our config,
   // which takes care of that.
@@ -358,6 +381,7 @@ int main(int argc, char** argv)
     // Generate and publish simulated measurements from the new robot state
     imu_publisher->publish(simulateImu(new_state));
     odom_publisher->publish(simulateOdometry(new_state));
+    twist_publisher->publish(simulateTwist(new_state));
 
     // Wait for the next time step
     state = new_state;
