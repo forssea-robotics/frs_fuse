@@ -69,7 +69,7 @@ void Pose2D::onInit()
   clock_ = interfaces_.get_node_clock_interface()->get_clock();
 
   // Read settings from the parameter sever
-  device_id_ = fuse_variables::loadDeviceId(interfaces_);
+  device_id_ = fuse_variables::loadDeviceId(interfaces_, name_);
 
   params_.loadFromROS(interfaces_, name_);
 

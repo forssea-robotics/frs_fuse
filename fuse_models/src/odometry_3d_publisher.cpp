@@ -90,7 +90,7 @@ void Odometry3DPublisher::onInit()
   tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(interfaces_);
 
   // Read settings from the parameter sever
-  device_id_ = fuse_variables::loadDeviceId(interfaces_);
+  device_id_ = fuse_variables::loadDeviceId(interfaces_, name_);
 
   params_.loadFromROS(interfaces_, name_);
 
