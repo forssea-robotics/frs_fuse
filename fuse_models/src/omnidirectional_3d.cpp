@@ -242,7 +242,7 @@ void Omnidirectional3D::onInit()
   buffer_length_ = (buffer_length == 0.0) ? rclcpp::Duration::max() : rclcpp::Duration::from_seconds(buffer_length);
   timestamp_manager_.bufferLength(buffer_length_);
 
-  device_id_ = fuse_variables::loadDeviceId(interfaces_);
+  device_id_ = fuse_variables::loadDeviceId(interfaces_, name_);
 }
 
 void Omnidirectional3D::onStart()
