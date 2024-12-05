@@ -194,9 +194,9 @@ tf2_msgs::msg::TFMessage aprilTagPoses(Robot const& robot)
     bool const z_positive = ((i >> 0) & 1) == 0u;
 
     // robot position with offset and noise
-    april_to_base.transform.translation.x = x_positive ? 1. : -1.;
-    april_to_base.transform.translation.y = y_positive ? 1. : -1.;
-    april_to_base.transform.translation.z = z_positive ? 1. : -1.;
+    april_to_base.transform.translation.x = -(x_positive ? 1. : -1.);
+    april_to_base.transform.translation.y = -(y_positive ? 1. : -1.);
+    april_to_base.transform.translation.z = -(z_positive ? 1. : -1.);
     msg.transforms.push_back(april_to_base);
   }
   return msg;
