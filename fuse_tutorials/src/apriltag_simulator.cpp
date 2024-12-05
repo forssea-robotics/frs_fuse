@@ -174,10 +174,10 @@ tf2_msgs::msg::TFMessage aprilTagPoses(Robot const& robot)
   for (std::size_t i = 0; i < numAprilTags; ++i)
   {
     geometry_msgs::msg::TransformStamped april_to_base;
-    april_to_base.child_frame_id = "base_link";
+    april_to_base.header.frame_id = "base_link";
 
     // april tag names start at 1
-    april_to_base.header.frame_id = "april_" + std::to_string(i + 1);
+    april_to_base.child_frame_id = "april_" + std::to_string(i + 1);
     april_to_base.header.stamp = robot.stamp;
 
     april_to_base.transform.rotation.w = 1;
@@ -193,9 +193,9 @@ tf2_msgs::msg::TFMessage aprilTagPoses(Robot const& robot)
     bool const z_positive = ((i >> 0) & 1) == 0u;
 
     // robot position with offset and noise
-    april_to_base.transform.translation.x = x_positive ? 1. : -1.;
-    april_to_base.transform.translation.y = y_positive ? 1. : -1.;
-    april_to_base.transform.translation.z = z_positive ? 1. : -1.;
+    april_to_base.transform.translation.x = -(x_positive ? 1. : -1.);
+    april_to_base.transform.translation.y = -(y_positive ? 1. : -1.);
+    april_to_base.transform.translation.z = -(z_positive ? 1. : -1.);
     msg.transforms.push_back(april_to_base);
   }
   return msg;
