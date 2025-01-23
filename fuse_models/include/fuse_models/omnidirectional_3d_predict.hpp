@@ -117,9 +117,12 @@ inline void predict(const T position1_x, const T position1_y, const T position1_
   orientation2_p = orientation1_p + (cr * vel_angular1_p - sr * vel_angular1_y) * dt;
   orientation2_y = orientation1_y + (sr * cpi * vel_angular1_p + cr * cpi * vel_angular1_y) * dt;
 
-  vel_linear2_x = vel_linear1_x + acc_linear1_x * dt;
-  vel_linear2_y = vel_linear1_y + acc_linear1_y * dt;
-  vel_linear2_z = vel_linear1_z + acc_linear1_z * dt;
+  vel_linear2_x =
+      vel_linear1_x + (acc_linear1_x - vel_angular1_p * vel_linear1_z + vel_angular1_y * vel_linear1_y) * dt;
+  vel_linear2_y =
+      vel_linear1_y + (acc_linear1_y - vel_angular1_y * vel_linear1_x + vel_angular1_r * vel_linear1_z) * dt;
+  vel_linear2_z =
+      vel_linear1_z + (acc_linear1_z - vel_angular1_r * vel_linear1_y + vel_angular1_p * vel_linear1_x) * dt;
 
   vel_angular2_r = vel_angular1_r;
   vel_angular2_p = vel_angular1_p;
@@ -213,9 +216,12 @@ inline void predict(const double position1_x, const double position1_y, const do
   orientation2_p = orientation1_p + (cr * vel_angular1_p - sr * vel_angular1_y) * dt;
   orientation2_y = orientation1_y + (sr * cpi * vel_angular1_p + cr * cpi * vel_angular1_y) * dt;
 
-  vel_linear2_x = vel_linear1_x + acc_linear1_x * dt;
-  vel_linear2_y = vel_linear1_y + acc_linear1_y * dt;
-  vel_linear2_z = vel_linear1_z + acc_linear1_z * dt;
+  vel_linear2_x =
+      vel_linear1_x + (acc_linear1_x - vel_angular1_p * vel_linear1_z + vel_angular1_y * vel_linear1_y) * dt;
+  vel_linear2_y =
+      vel_linear1_y + (acc_linear1_y - vel_angular1_y * vel_linear1_x + vel_angular1_r * vel_linear1_z) * dt;
+  vel_linear2_z =
+      vel_linear1_z + (acc_linear1_z - vel_angular1_r * vel_linear1_y + vel_angular1_p * vel_linear1_x) * dt;
 
   vel_angular2_r = vel_angular1_r;
   vel_angular2_p = vel_angular1_p;
@@ -318,9 +324,15 @@ inline void predict(const double position1_x, const double position1_y, const do
       jacobian(2, 2) = cr * cp * dt;
       // partial derivatives of vel_linear2_x wrt vel_linear1
       jacobian(6, 0) = 1.0;
+      jacobian(6, 1) = vel_angular1_y * dt;
+      jacobian(6, 2) = -vel_angular1_p * dt;
       // partial derivatives of vel_linear2_y wrt vel_linear1
+      jacobian(7, 0) = -vel_angular1_y * dt;
       jacobian(7, 1) = 1.0;
+      jacobian(7, 2) = vel_angular1_r * dt;
       // partial derivatives of vel_linear2_z wrt vel_linear1
+      jacobian(8, 0) = vel_angular1_p * dt;
+      jacobian(8, 1) = -vel_angular1_r * dt;
       jacobian(8, 2) = 1.0;
     }
 
@@ -340,6 +352,15 @@ inline void predict(const double position1_x, const double position1_y, const do
       // partial derivatives of orientation2_y wrt vel_angular1
       jacobian(5, 1) = sr * cpi * dt;
       jacobian(5, 2) = cr * cpi * dt;
+      // partial derivatives of vel_linear2_x wrt vel_angular1
+      jacobian(6, 1) = -vel_linear1_z * dt;
+      jacobian(6, 2) = vel_linear1_y * dt;
+      // partial derivatives of vel_linear2_y wrt vel_angular1
+      jacobian(7, 0) = vel_linear1_z * dt;
+      jacobian(7, 2) = -vel_linear1_x * dt;
+      // partial derivatives of vel_linear2_z wrt vel_angular1
+      jacobian(8, 0) = -vel_linear1_y * dt;
+      jacobian(8, 1) = vel_linear1_x * dt;
       // partial derivatives of vel_angular2_r wrt vel_angular1
       jacobian(9, 0) = 1.0;
       // partial derivatives of vel_angular2_p wrt vel_angular1
