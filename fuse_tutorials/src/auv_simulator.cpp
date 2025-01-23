@@ -77,7 +77,7 @@ constexpr double seaBottomHeight = -5.;         //!< The sea bottom is 10 meters
 
 constexpr double x_amplitude = 5.0;  //!< The amplitude of the x trajectory
 constexpr double y_amplitude = 5.0;  //!< The amplitude of the y trajectory
-constexpr double z_amplitude = 0.0;  //!< The amplitude of the z trajectory
+constexpr double z_amplitude = 2.0;  //!< The amplitude of the z trajectory
 constexpr double period = 60.0;      //!< The period of the trajectory
 }  // namespace
 
