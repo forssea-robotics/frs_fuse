@@ -38,6 +38,7 @@
 #include <chrono>
 #include <memory>
 #include <mutex>
+#include <rclcpp/logging.hpp>
 #include <string>
 #include <utility>
 #include <vector>
@@ -580,6 +581,26 @@ void Odometry3DPublisher::publishTimerCallback()
         return;
       }
     }
+
+    tf_broadcaster_->sendTransform(trans);
+  }
+
+  if (params_.publish_nav_tf)
+  {
+    auto frame_id = params_.base_link_frame_id;
+    auto child_frame_id = params_.navigation_frame_id;
+
+    geometry_msgs::msg::TransformStamped trans;
+    trans.header.stamp = odom_output.header.stamp;
+    trans.header.frame_id = frame_id;
+    trans.child_frame_id = child_frame_id;
+    trans.transform.translation.x = 0.0;
+    trans.transform.translation.y = 0.0;
+    trans.transform.translation.z = 0.0;
+    trans.transform.rotation.w = -odom_output.pose.pose.orientation.w;  // invert the orientation
+    trans.transform.rotation.x = odom_output.pose.pose.orientation.x;
+    trans.transform.rotation.y = odom_output.pose.pose.orientation.y;
+    trans.transform.rotation.z = odom_output.pose.pose.orientation.z;
 
     tf_broadcaster_->sendTransform(trans);
   }

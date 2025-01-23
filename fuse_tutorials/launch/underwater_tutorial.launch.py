@@ -47,7 +47,9 @@ def generate_launch_description():
                 name="state_estimator",
                 output="screen",
                 parameters=[
-                    PathJoinSubstitution([pkg_dir, "config", "underwater_tutorial.yaml"])
+                    PathJoinSubstitution(
+                        [pkg_dir, "config", "underwater_tutorial.yaml"]
+                    )
                 ],
             ),
             # run visualization

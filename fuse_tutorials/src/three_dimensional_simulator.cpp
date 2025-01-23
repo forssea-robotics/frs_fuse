@@ -51,15 +51,15 @@
 
 namespace
 {
-constexpr char baselinkFrame[] = "base_link";  //!< The base_link frame id used when
-                                               //!< publishing sensor data
-constexpr char mapFrame[] = "map";             //!< The map frame id used when publishing ground truth
-                                               //!< data
-constexpr double imuSigma = 0.001;               //!< Std dev of simulated Imu measurement noise
-constexpr char odomFrame[] = "odom";           //!< The odom frame id used when publishing wheel
+constexpr char baselinkFrame[] = "base_link";   //!< The base_link frame id used when
+                                                //!< publishing sensor data
+constexpr char mapFrame[] = "map";              //!< The map frame id used when publishing ground truth
+                                                //!< data
+constexpr double imuSigma = 0.001;              //!< Std dev of simulated Imu measurement noise
+constexpr char odomFrame[] = "odom";            //!< The odom frame id used when publishing wheel
 constexpr double odomPositionSigma = 0.05;      //!< Std dev of simulated odom position measurement noise
-constexpr double odomOrientationSigma = 0.001;   //!< Std dev of simulated odom orientation measurement noise
-constexpr double twistLinearSigma = 0.001;       //!< Std dev of simulated twist measurement noise
+constexpr double odomOrientationSigma = 0.001;  //!< Std dev of simulated odom orientation measurement noise
+constexpr double twistLinearSigma = 0.001;      //!< Std dev of simulated twist measurement noise
 }  // namespace
 
 /**
