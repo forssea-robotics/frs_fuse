@@ -117,7 +117,7 @@ void Pose2DPublisher::initialize(fuse_core::node_interfaces::NodeInterfaces<ALL_
 
 void Pose2DPublisher::onInit()
 {
-  logger_ = interfaces_.get_node_logging_interface()->get_logger();
+  logger_ = interfaces_.get_node_logging_interface()->get_logger().get_child("Pose2DPublisher");
   clock_ = interfaces_.get_node_clock_interface()->get_clock();
 
   tf_publisher_ = std::make_shared<tf2_ros::TransformBroadcaster>(interfaces_);

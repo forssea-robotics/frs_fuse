@@ -59,7 +59,7 @@ void GraphIgnition::initialize(fuse_core::node_interfaces::NodeInterfaces<ALL_FU
 
 void GraphIgnition::onInit()
 {
-  logger_ = interfaces_.get_node_logging_interface()->get_logger();
+  logger_ = interfaces_.get_node_logging_interface()->get_logger().get_child("GraphIgnition");
 
   // Read settings from the parameter sever
   params_.loadFromROS(interfaces_, name_);

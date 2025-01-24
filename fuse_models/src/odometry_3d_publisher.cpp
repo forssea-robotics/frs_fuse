@@ -85,7 +85,7 @@ void Odometry3DPublisher::initialize(
 
 void Odometry3DPublisher::onInit()
 {
-  logger_ = interfaces_.get_node_logging_interface()->get_logger();
+  logger_ = interfaces_.get_node_logging_interface()->get_logger().get_child("Odometry3DPublisher");
   clock_ = interfaces_.get_node_clock_interface()->get_clock();
 
   tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(interfaces_);

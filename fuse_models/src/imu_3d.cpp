@@ -68,7 +68,7 @@ void Imu3D::initialize(fuse_core::node_interfaces::NodeInterfaces<ALL_FUSE_CORE_
 
 void Imu3D::onInit()
 {
-  logger_ = interfaces_.get_node_logging_interface()->get_logger();
+  logger_ = interfaces_.get_node_logging_interface()->get_logger().get_child("Imu3D");
   clock_ = interfaces_.get_node_clock_interface()->get_clock();
 
   // Read settings from the parameter sever

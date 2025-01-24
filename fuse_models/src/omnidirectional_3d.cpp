@@ -206,7 +206,7 @@ void Omnidirectional3D::initialize(fuse_core::node_interfaces::NodeInterfaces<AL
 
 void Omnidirectional3D::onInit()
 {
-  logger_ = interfaces_.get_node_logging_interface()->get_logger();
+  logger_ = interfaces_.get_node_logging_interface()->get_logger().get_child("Omnidirectional3D");
   clock_ = interfaces_.get_node_clock_interface()->get_clock();
 
   std::vector<double> process_noise_diagonal;

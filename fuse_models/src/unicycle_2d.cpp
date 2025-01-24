@@ -203,7 +203,7 @@ void Unicycle2D::initialize(fuse_core::node_interfaces::NodeInterfaces<ALL_FUSE_
 
 void Unicycle2D::onInit()
 {
-  logger_ = interfaces_.get_node_logging_interface()->get_logger();
+  logger_ = interfaces_.get_node_logging_interface()->get_logger().get_child("Unicycle2D");
   clock_ = interfaces_.get_node_clock_interface()->get_clock();
 
   std::vector<double> process_noise_diagonal;

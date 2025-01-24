@@ -72,7 +72,7 @@ void RangeSensorModel::priorBeaconsCallback(const sensor_msgs::msg::PointCloud2&
 
 void RangeSensorModel::onInit()
 {
-  logger_ = interfaces_.get_node_logging_interface()->get_logger();
+  logger_ = interfaces_.get_node_logging_interface()->get_logger().get_child("RangeSensorModel");
 
   // Read settings from the parameter server, or any other one-time operations. This sensor model
   // doesn't have any user configuration to read. But we do need a copy of the beacon database. We

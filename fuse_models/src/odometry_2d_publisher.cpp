@@ -78,7 +78,7 @@ void Odometry2DPublisher::initialize(
 
 void Odometry2DPublisher::onInit()
 {
-  logger_ = interfaces_.get_node_logging_interface()->get_logger();
+  logger_ = interfaces_.get_node_logging_interface()->get_logger().get_child("Odometry2DPublisher");
   clock_ = interfaces_.get_node_clock_interface()->get_clock();
 
   tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(interfaces_);

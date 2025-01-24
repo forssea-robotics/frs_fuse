@@ -83,7 +83,7 @@ void Unicycle2DIgnition::initialize(fuse_core::node_interfaces::NodeInterfaces<A
 
 void Unicycle2DIgnition::onInit()
 {
-  logger_ = interfaces_.get_node_logging_interface()->get_logger();
+  logger_ = interfaces_.get_node_logging_interface()->get_logger().get_child("Unicycle2DIgnition");
   clock_ = interfaces_.get_node_clock_interface()->get_clock();
 
   // Read settings from the parameter sever

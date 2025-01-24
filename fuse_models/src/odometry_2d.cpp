@@ -67,7 +67,7 @@ void Odometry2D::initialize(fuse_core::node_interfaces::NodeInterfaces<ALL_FUSE_
 
 void Odometry2D::onInit()
 {
-  logger_ = interfaces_.get_node_logging_interface()->get_logger();
+  logger_ = interfaces_.get_node_logging_interface()->get_logger().get_child("Odometry2D");
   clock_ = interfaces_.get_node_clock_interface()->get_clock();
 
   // Read settings from the parameter sever

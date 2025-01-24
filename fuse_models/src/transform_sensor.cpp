@@ -73,7 +73,7 @@ void TransformSensor::initialize(fuse_core::node_interfaces::NodeInterfaces<ALL_
 
 void TransformSensor::onInit()
 {
-  logger_ = interfaces_.get_node_logging_interface()->get_logger();
+  logger_ = interfaces_.get_node_logging_interface()->get_logger().get_child(("TransformSensor"));
   clock_ = interfaces_.get_node_clock_interface()->get_clock();
 
   // Read settings from the parameter server
