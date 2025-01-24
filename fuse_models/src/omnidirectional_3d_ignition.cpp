@@ -85,7 +85,7 @@ void Omnidirectional3DIgnition::initialize(
 
 void Omnidirectional3DIgnition::onInit()
 {
-  logger_ = interfaces_.get_node_logging_interface()->get_logger();
+  logger_ = interfaces_.get_node_logging_interface()->get_logger().get_child("Omnidirectional3DIgnition");
   clock_ = interfaces_.get_node_clock_interface()->get_clock();
 
   // Read settings from the parameter sever
