@@ -46,11 +46,11 @@
 #include <fuse_msgs/srv/set_pose.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
+#include <rclcpp/node_options.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
 #include <sensor_msgs/point_cloud2_iterator.hpp>
-#include <utility>
 #include <utility>
 
 namespace
@@ -67,18 +67,26 @@ constexpr char seaSurfaceFrame[] =
 constexpr char seaBottomFrame[] =
     "sea_bottom";                               //!< The sea surface is defined by a pressure sensor, and will be placed
                                                 //!< above the base_link frame, with a z offset and a null orientation
-constexpr double imuSigma = 0.001;              //!< Std dev of simulated Imu measurement noise
 constexpr char odomFrame[] = "odom";            //!< The odom frame id used when publishing wheel
-constexpr double odomPositionSigma = 0.05;      //!< Std dev of simulated odom position measurement noise
-constexpr double odomOrientationSigma = 0.001;  //!< Std dev of simulated odom orientation measurement noise
-constexpr double twistLinearSigma = 0.001;      //!< Std dev of simulated twist measurement noise
-constexpr double seaSurfaceHeight = 5.;         //!< The sea surface is 10 meters above the ellipsoid surface
-constexpr double seaBottomHeight = -5.;         //!< The sea bottom is 10 meters below the ellipsoid surface
 
-constexpr double x_amplitude = 5.0;  //!< The amplitude of the x trajectory
-constexpr double y_amplitude = 5.0;  //!< The amplitude of the y trajectory
-constexpr double z_amplitude = 2.0;  //!< The amplitude of the z trajectory
-constexpr double period = 60.0;      //!< The period of the trajectory
+double imuOrientationRollPitchSigma = 0.001;  //!< Std dev of simulated Imu measurement noise
+double imuOrientationYawSigma = 0.001;        //!< Std dev of simulated Imu measurement noise
+double imuAngularVelSigma = 0.001;            //!< Std dev of simulated Imu measurement noise
+double imuLinearAccSigma = 0.001;             //!< Std dev of simulated Imu measurement noise
+double absolutePositionXSigma = 0.001;        //!< Std dev of simulated positioning sensor noise
+double absolutePositionYSigma = 0.001;        //!< Std dev of simulated positioning sensor noise
+double absolutePositionZSigma = 0.001;        //!< Std dev of simulated positioning sensor noise
+double twistLinearSigma = 0.001;              //!< Std dev of simulated twist measurement noise
+double depthSigma = 0.001;                    //!< Std dev of simulated depth measurement noise
+double altitudeSigma = 0.001;                 //!< Std dev of simulated altitude measurement noise
+
+double seaSurfaceHeight = 5.;                 //!< The sea surface is 10 meters above the ellipsoid surface
+double seaBottomHeight = -5.;                 //!< The sea bottom is 10 meters below the ellipsoid surface
+
+double x_amplitude = 5.0;  //!< The amplitude of the x trajectory
+double y_amplitude = 5.0;  //!< The amplitude of the y trajectory
+double z_amplitude = 2.0;  //!< The amplitude of the z trajectory
+double period = 60.0;      //!< The period of the trajectory
 }  // namespace
 
 /**
@@ -199,64 +207,61 @@ sensor_msgs::msg::Imu simulateImu(State const& state)
 {
   static std::random_device rd{};
   static std::mt19937 generator{ rd() };
-  static std::normal_distribution<> noise{ 0.0, imuSigma };
+  static std::normal_distribution<> orientationRollPitchNoise{ 0.0, imuOrientationRollPitchSigma };
+  static std::normal_distribution<> orientationYawNoise{ 0.0, imuOrientationYawSigma };
+  static std::normal_distribution<> angularVelNoise{ 0.0, imuAngularVelSigma };
+  static std::normal_distribution<> linearAccNoise{ 0.0, imuLinearAccSigma };
 
   sensor_msgs::msg::Imu msg;
   msg.header.stamp = state.stamp;
   msg.header.frame_id = baselinkFrame;
 
   // measure accel
-  msg.linear_acceleration.x = state.linear_acceleration_body_frame.x() + noise(generator);
-  msg.linear_acceleration.y = state.linear_acceleration_body_frame.y() + noise(generator);
-  msg.linear_acceleration.z = state.linear_acceleration_body_frame.z() + noise(generator);
-  msg.linear_acceleration_covariance[0] = imuSigma * imuSigma;
-  msg.linear_acceleration_covariance[4] = imuSigma * imuSigma;
-  msg.linear_acceleration_covariance[8] = imuSigma * imuSigma;
+  msg.linear_acceleration.x = state.linear_acceleration_body_frame.x() + linearAccNoise(generator);
+  msg.linear_acceleration.y = state.linear_acceleration_body_frame.y() + linearAccNoise(generator);
+  msg.linear_acceleration.z = state.linear_acceleration_body_frame.z() + linearAccNoise(generator);
+  msg.linear_acceleration_covariance[0] = imuLinearAccSigma * imuLinearAccSigma;
+  msg.linear_acceleration_covariance[4] = imuLinearAccSigma * imuLinearAccSigma;
+  msg.linear_acceleration_covariance[8] = imuLinearAccSigma * imuLinearAccSigma;
 
   msg.orientation.w = state.orientation.w();
   msg.orientation.x = state.orientation.x();
   msg.orientation.y = state.orientation.y();
   msg.orientation.z = state.orientation.z();
-  msg.orientation_covariance[0] = imuSigma * imuSigma;
-  msg.orientation_covariance[4] = imuSigma * imuSigma;
-  msg.orientation_covariance[8] = imuSigma * imuSigma;
+  msg.orientation_covariance[0] = imuOrientationRollPitchSigma * imuOrientationRollPitchSigma;
+  msg.orientation_covariance[4] = imuOrientationRollPitchSigma * imuOrientationRollPitchSigma;
+  msg.orientation_covariance[8] = imuOrientationYawSigma * imuOrientationYawSigma;
 
-  msg.angular_velocity.x = state.angular_velocity_body_frame.x() + noise(generator);
-  msg.angular_velocity.y = state.angular_velocity_body_frame.y() + noise(generator);
-  msg.angular_velocity.z = state.angular_velocity_body_frame.z() + noise(generator);
-  msg.angular_velocity_covariance[0] = imuSigma * imuSigma;
-  msg.angular_velocity_covariance[4] = imuSigma * imuSigma;
-  msg.angular_velocity_covariance[8] = imuSigma * imuSigma;
+  msg.angular_velocity.x = state.angular_velocity_body_frame.x() + angularVelNoise(generator);
+  msg.angular_velocity.y = state.angular_velocity_body_frame.y() + angularVelNoise(generator);
+  msg.angular_velocity.z = state.angular_velocity_body_frame.z() + angularVelNoise(generator);
+  msg.angular_velocity_covariance[0] = imuAngularVelSigma * imuAngularVelSigma;
+  msg.angular_velocity_covariance[4] = imuAngularVelSigma * imuAngularVelSigma;
+  msg.angular_velocity_covariance[8] = imuAngularVelSigma * imuAngularVelSigma;
   return msg;
 }
 
-nav_msgs::msg::Odometry simulateOdometry(const State& state)
+nav_msgs::msg::Odometry simulateAbsolutePosition(const State& state)
 {
   static std::random_device rd{};
   static std::mt19937 generator{ rd() };
-  static std::normal_distribution<> position_noise{ 0.0, odomPositionSigma };
+  static std::normal_distribution<> x_noise{ 0.0, absolutePositionXSigma };
+  static std::normal_distribution<> y_noise{ 0.0, absolutePositionYSigma };
+  static std::normal_distribution<> z_noise{ 0.0, absolutePositionZSigma };
 
   nav_msgs::msg::Odometry msg;
   msg.header.stamp = state.stamp;
-  msg.header.frame_id = odomFrame;
+  msg.header.frame_id = mapFrame;
   msg.child_frame_id = baselinkFrame;
 
   // noisy position measurement
-  msg.pose.pose.position.x = state.position.x() + position_noise(generator);
-  msg.pose.pose.position.y = state.position.y() + position_noise(generator);
-  msg.pose.pose.position.z = state.position.z() + position_noise(generator);
-  msg.pose.covariance[0] = odomPositionSigma * odomPositionSigma;
-  msg.pose.covariance[7] = odomPositionSigma * odomPositionSigma;
-  msg.pose.covariance[14] = odomPositionSigma * odomPositionSigma;
+  msg.pose.pose.position.x = state.position.x() + x_noise(generator);
+  msg.pose.pose.position.y = state.position.y() + y_noise(generator);
+  msg.pose.pose.position.z = state.position.z() + z_noise(generator);
+  msg.pose.covariance[0] = absolutePositionXSigma * absolutePositionXSigma;
+  msg.pose.covariance[7] = absolutePositionYSigma * absolutePositionYSigma;
+  msg.pose.covariance[14] = absolutePositionZSigma * absolutePositionZSigma;
 
-  // noisy orientation measurement
-  msg.pose.pose.orientation.w = state.orientation.w();
-  msg.pose.pose.orientation.x = state.orientation.x();
-  msg.pose.pose.orientation.y = state.orientation.y();
-  msg.pose.pose.orientation.z = state.orientation.z();
-  msg.pose.covariance[21] = odomOrientationSigma * odomOrientationSigma;
-  msg.pose.covariance[28] = odomOrientationSigma * odomOrientationSigma;
-  msg.pose.covariance[35] = odomOrientationSigma * odomOrientationSigma;
   return msg;
 }
 
@@ -264,7 +269,7 @@ nav_msgs::msg::Odometry simulateDepth(const State& state)
 {
   static std::random_device rd{};
   static std::mt19937 generator{ rd() };
-  static std::normal_distribution<> position_noise{ 0.0, odomPositionSigma };
+  static std::normal_distribution<> position_noise{ 0.0, depthSigma };
 
   nav_msgs::msg::Odometry msg;
   msg.header.stamp = state.stamp;
@@ -273,18 +278,18 @@ nav_msgs::msg::Odometry simulateDepth(const State& state)
 
   // noisy position measurement
   msg.pose.pose.position.z = state.depth + position_noise(generator);
-  msg.pose.covariance[0] = odomPositionSigma * odomPositionSigma;
-  msg.pose.covariance[7] = odomPositionSigma * odomPositionSigma;
-  msg.pose.covariance[14] = odomPositionSigma * odomPositionSigma;
+  msg.pose.covariance[0] = depthSigma * depthSigma;
+  msg.pose.covariance[7] = depthSigma * depthSigma;
+  msg.pose.covariance[14] = depthSigma * depthSigma;
 
   // orientation measurement
   msg.pose.pose.orientation.w = 1.0;
   msg.pose.pose.orientation.x = 0.0;
   msg.pose.pose.orientation.y = 0.0;
   msg.pose.pose.orientation.z = 0.0;
-  msg.pose.covariance[21] = odomOrientationSigma * odomOrientationSigma;
-  msg.pose.covariance[28] = odomOrientationSigma * odomOrientationSigma;
-  msg.pose.covariance[35] = odomOrientationSigma * odomOrientationSigma;
+  msg.pose.covariance[21] = 1e-9;
+  msg.pose.covariance[28] = 1e-9;
+  msg.pose.covariance[35] = 1e-9;
   return msg;
 }
 
@@ -292,7 +297,7 @@ nav_msgs::msg::Odometry simulateAltitude(const State& state)
 {
   static std::random_device rd{};
   static std::mt19937 generator{ rd() };
-  static std::normal_distribution<> position_noise{ 0.0, odomPositionSigma };
+  static std::normal_distribution<> position_noise{ 0.0, altitudeSigma };
 
   nav_msgs::msg::Odometry msg;
   msg.header.stamp = state.stamp;
@@ -301,18 +306,18 @@ nav_msgs::msg::Odometry simulateAltitude(const State& state)
 
   // noisy position measurement
   msg.pose.pose.position.z = -state.altitude + position_noise(generator);
-  msg.pose.covariance[0] = odomPositionSigma * odomPositionSigma;
-  msg.pose.covariance[7] = odomPositionSigma * odomPositionSigma;
-  msg.pose.covariance[14] = odomPositionSigma * odomPositionSigma;
+  msg.pose.covariance[0] = altitudeSigma * altitudeSigma;
+  msg.pose.covariance[7] = altitudeSigma * altitudeSigma;
+  msg.pose.covariance[14] = altitudeSigma * altitudeSigma;
 
   // orientation measurement
   msg.pose.pose.orientation.w = 1.0;
   msg.pose.pose.orientation.x = 0.0;
   msg.pose.pose.orientation.y = 0.0;
   msg.pose.pose.orientation.z = 0.0;
-  msg.pose.covariance[21] = odomOrientationSigma * odomOrientationSigma;
-  msg.pose.covariance[28] = odomOrientationSigma * odomOrientationSigma;
-  msg.pose.covariance[35] = odomOrientationSigma * odomOrientationSigma;
+  msg.pose.covariance[21] = 1e-9;
+  msg.pose.covariance[28] = 1e-9;
+  msg.pose.covariance[35] = 1e-9;
   return msg;
 }
 
@@ -411,7 +416,39 @@ int main(int argc, char** argv)
 {
   // set up our ROS node
   rclcpp::init(argc, argv);
-  auto node = rclcpp::Node::make_shared("three_dimensional_simulator");
+  auto node = rclcpp::Node::make_shared("auv_simulator", rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true));
+
+  const double max_freq = 100.0;
+  double imu_publish_frequency=100.0;
+  double absolute_position_publish_frequency=100.0;
+  double twist_publish_frequency=100.0;
+  double depth_publish_frequency=100.0;
+  double altitude_publish_frequency=100.0;
+
+  // get the parameters
+  node->get_parameter_or<double>("imu_orientation_roll_pitch_sigma", imuOrientationRollPitchSigma,
+                                 imuOrientationRollPitchSigma);
+  node->get_parameter_or<double>("imu_orientation_yaw_sigma", imuOrientationYawSigma, imuOrientationYawSigma);
+  node->get_parameter_or<double>("imu_angular_vel_sigma", imuAngularVelSigma, imuAngularVelSigma);
+  node->get_parameter_or<double>("imu_linear_acc_sigma", imuLinearAccSigma, imuLinearAccSigma);
+  node->get_parameter_or<double>("imu_publish_frequency", imu_publish_frequency, imu_publish_frequency);
+  node->get_parameter_or<double>("absolute_position_x_sigma", absolutePositionXSigma, absolutePositionXSigma);
+  node->get_parameter_or<double>("absolute_position_y_sigma", absolutePositionYSigma, absolutePositionYSigma);
+  node->get_parameter_or<double>("absolute_position_z_sigma", absolutePositionZSigma, absolutePositionZSigma);
+  node->get_parameter_or<double>("absolute_position_publish_frequency", absolute_position_publish_frequency,
+                                 absolute_position_publish_frequency);
+  node->get_parameter_or<double>("twist_linear_sigma", twistLinearSigma, twistLinearSigma);
+  node->get_parameter_or<double>("twist_publish_frequency", twist_publish_frequency, twist_publish_frequency);
+  node->get_parameter_or<double>("depth_sigma", depthSigma, depthSigma);
+  node->get_parameter_or<double>("depth_publish_frequency", depth_publish_frequency, depth_publish_frequency);
+  node->get_parameter_or<double>("altitude_sigma", altitudeSigma, altitudeSigma);
+  node->get_parameter_or<double>("altitude_publish_frequency", altitude_publish_frequency, altitude_publish_frequency);
+  node->get_parameter_or<double>("sea_surface_height", seaSurfaceHeight, seaSurfaceHeight);
+  node->get_parameter_or<double>("sea_bottom_height", seaBottomHeight, seaBottomHeight);
+  node->get_parameter_or<double>("x_amplitude", x_amplitude, x_amplitude);
+  node->get_parameter_or<double>("y_amplitude", y_amplitude, y_amplitude);
+  node->get_parameter_or<double>("z_amplitude", z_amplitude, z_amplitude);
+  node->get_parameter_or<double>("period", period, period);
 
   // create our sensor publishers
   auto imu_publisher = node->create_publisher<sensor_msgs::msg::Imu>("imu", 1);
@@ -426,10 +463,22 @@ int main(int argc, char** argv)
 
   // you can modify the rate at which this loop runs to see the different performance of the estimator and the effect of
   // integration inaccuracy on the ground truth
-  auto rate = rclcpp::Rate(100.0);
+  auto rate = rclcpp::Rate(max_freq);
 
   // normally we would have to initialize the state estimation, but we included an ignition 'sensor' in our config,
   // which takes care of that.
+
+  int i = 0;
+  int i_imu = max_freq / imu_publish_frequency;
+  int i_absolute_position = max_freq / absolute_position_publish_frequency;
+  int i_twist = max_freq / twist_publish_frequency;
+  int i_depth = max_freq / depth_publish_frequency;
+  int i_altitude = max_freq / altitude_publish_frequency;
+  std::cout << "i_imu: " << i_imu << std::endl;
+  std::cout << "i_absolute_position: " << i_absolute_position << std::endl;
+  std::cout << "i_twist: " << i_twist << std::endl;
+  std::cout << "i_depth: " << i_depth << std::endl;
+  std::cout << "i_altitude: " << i_altitude << std::endl;
 
   while (rclcpp::ok())
   {
@@ -449,15 +498,30 @@ int main(int argc, char** argv)
     true_imu_publisher->publish(stateToTrueImu(state));
 
     // Generate and publish simulated measurements from the new robot state
-    imu_publisher->publish(simulateImu(state));
-    odom_publisher->publish(simulateOdometry(state));
-    twist_publisher->publish(simulateTwist(state));
-    depth_publisher->publish(simulateDepth(state));
-    altitude_publisher->publish(simulateAltitude(state));
-
+    if (i % i_imu == 0)
+    {
+      imu_publisher->publish(simulateImu(state));
+    }
+    if (i % i_absolute_position == 0)
+    {
+      odom_publisher->publish(simulateAbsolutePosition(state));
+    }
+    if (i % i_twist == 0)
+    {
+      twist_publisher->publish(simulateTwist(state));
+    }
+    if (i % i_depth == 0)
+    {
+      depth_publisher->publish(simulateDepth(state));
+    }
+    if (i % i_altitude == 0)
+    {
+      altitude_publisher->publish(simulateAltitude(state));
+    }
     // Wait for the next time step
     rclcpp::spin_some(node);
     rate.sleep();
+    ++i;
   }
 
   rclcpp::shutdown();

@@ -39,6 +39,9 @@ def generate_launch_description():
                 executable="auv_simulator",
                 name="auv_simulator",
                 output="screen",
+                parameters=[
+                    PathJoinSubstitution([pkg_dir, "config", "auv_tutorial.yaml"])
+                ]
             ),
             # run our estimator
             Node(
