@@ -33,6 +33,8 @@ state_estimator:
     motion_models:
       smooth_motion_model:
         type: fuse_models::Omnidirectional3D
+      non_smooth_motion_model:
+        type: fuse_models::Omnidirectional3D
       # sea_surface_motion_model:
       #   type: fuse_models::Omnidirectional3D
       # sea_bottom_motion_model:
@@ -42,6 +44,11 @@ state_estimator:
       # x, y, z, roll, pitch, yaw, x_vel, y_vel, z_vel, roll_vel, pitch_vel, yaw_vel, x_acc, y_acc, z_acc
       process_noise_diagonal: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
       device_name: 'base_link'
+
+    non_smooth_motion_model:
+      # x, y, z, roll, pitch, yaw, x_vel, y_vel, z_vel, roll_vel, pitch_vel, yaw_vel, x_acc, y_acc, z_acc
+      process_noise_diagonal: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+      device_name: 'base_link_non_smooth'
 
     # sea_surface_motion_model:
     #   # x, y, z, roll, pitch, yaw, x_vel, y_vel, z_vel, roll_vel, pitch_vel, yaw_vel, x_acc, y_acc, z_acc
@@ -58,6 +65,10 @@ state_estimator:
         type: fuse_models::Omnidirectional3DIgnition
         motion_models: [smooth_motion_model]
         ignition: true
+      initial_localization_sensor_non_smooth:
+        type: fuse_models::Omnidirectional3DIgnition
+        motion_models: [non_smooth_motion_model]
+        ignition: true
       # initial_sea_surface:
       #   type: fuse_models::Omnidirectional3DIgnition
       #   motion_models: [sea_surface_motion_model]
@@ -68,7 +79,7 @@ state_estimator:
       #   ignition: true
       gnss_sensor:
         type: fuse_models::Odometry3D
-        motion_models: [smooth_motion_model]
+        motion_models: [non_smooth_motion_model]
       # sea_surface_sensor:
       #   type: fuse_models::Odometry3D
       #   motion_models: [sea_surface_motion_model]
@@ -81,6 +92,12 @@ state_estimator:
       velocity_sensor:
         type: fuse_models::Twist3D
         motion_models: [smooth_motion_model]
+      imu_sensor_non_smooth:
+        type: fuse_models::Imu3D
+        motion_models: [non_smooth_motion_model]
+      velocity_sensor_non_smooth:
+        type: fuse_models::Twist3D
+        motion_models: [non_smooth_motion_model]
 
     initial_localization_sensor:
       publish_on_startup: true
@@ -88,6 +105,13 @@ state_estimator:
       initial_state: [5.0, 0.0, 0.0, 0.0, 0.0, 1.57, 0.52, 0.0, 0.0, 0.0, 0.0, 0.054, 0.0, 0.054, 0.0]
       initial_sigma: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
       device_name: 'base_link'
+
+    initial_localization_sensor_non_smooth:
+      publish_on_startup: true
+      # x, y, z, roll, pitch, yaw, x_vel, y_vel, z_vel, roll_vel, pitch_vel, yaw_vel, x_acc, y_acc, z_acc
+      initial_state: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      initial_sigma: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+      device_name: 'base_link_non_smooth'
 
     # initial_sea_surface:
     #   publish_on_startup: true
@@ -103,17 +127,11 @@ state_estimator:
     #   initial_sigma: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
     #   device_name: 'sea_bottom'
 
-    velocity_sensor:
-      topic: 'twist'
-      target_frame: 'base_link'
-      linear_dimensions: ['x', 'y', 'z']
-      device_name: 'base_link'
-
     gnss_sensor:
       topic: 'gnss'
       # we only want position and orientation, but you can get a full odometry measurement from this sensor
       position_dimensions: ['x', 'y', 'z']
-      device_name: 'base_link'
+      device_name: 'base_link_non_smooth'
 
     # sea_surface_sensor:
     #   topic: 'depth'
@@ -141,9 +159,31 @@ state_estimator:
       angular_velocity_dimensions: ['roll', 'pitch', 'yaw']
       device_name: 'base_link'
 
+    velocity_sensor:
+      topic: 'twist'
+      target_frame: 'base_link'
+      linear_dimensions: ['x', 'y', 'z']
+      device_name: 'base_link'
+
+    imu_sensor_non_smooth:
+      topic: 'imu'
+      # we only care about linear acceleration for this tutorial
+      linear_acceleration_dimensions: ['x', 'y', 'z']
+      orientation_dimensions: ['roll', 'pitch', 'yaw']
+      angular_velocity_dimensions: ['roll', 'pitch', 'yaw']
+      device_name: 'base_link_non_smooth'
+
+    velocity_sensor_non_smooth:
+      topic: 'twist'
+      target_frame: 'base_link'
+      linear_dimensions: ['x', 'y', 'z']
+      device_name: 'base_link_non_smooth'
+
     # this publishes our estimated odometry
     publishers:
       filtered_publisher:
+        type: fuse_models::Odometry3DPublisher
+      non_smooth_filtered_publisher:
         type: fuse_models::Odometry3DPublisher
       # sea_surface_publisher:
       #   type: fuse_models::Odometry3DPublisher
@@ -163,6 +203,16 @@ state_estimator:
       publish_nav_tf: true
       publish_frequency: 10.0
       device_name: 'base_link'
+    non_smooth_filtered_publisher:
+      topic: 'map_filtered'
+      base_link_output_frame_id: 'base_link'
+      base_link_frame_id: 'base_link'
+      odom_frame_id: 'odom'
+      map_frame_id: 'map'
+      world_frame_id: 'map'
+      publish_tf: true
+      publish_frequency: 10.0
+      device_name: 'base_link_non_smooth'
     # sea_surface_publisher:
     #   topic: 'sea_surface_filtered'
     #   base_link_output_frame_id: 'sea_surface'
