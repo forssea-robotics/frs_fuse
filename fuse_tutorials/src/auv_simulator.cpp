@@ -452,7 +452,7 @@ int main(int argc, char** argv)
 
   // create our sensor publishers
   auto imu_publisher = node->create_publisher<sensor_msgs::msg::Imu>("imu", 1);
-  auto odom_publisher = node->create_publisher<nav_msgs::msg::Odometry>("odom", 1);
+  auto gnss_publisher = node->create_publisher<nav_msgs::msg::Odometry>("gnss", 1);
   auto twist_publisher = node->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>("twist", 1);
   auto depth_publisher = node->create_publisher<nav_msgs::msg::Odometry>("depth", 1);
   auto altitude_publisher = node->create_publisher<nav_msgs::msg::Odometry>("altitude", 1);
@@ -504,7 +504,7 @@ int main(int argc, char** argv)
     }
     if (i % i_absolute_position == 0)
     {
-      odom_publisher->publish(simulateAbsolutePosition(state));
+      gnss_publisher->publish(simulateAbsolutePosition(state));
     }
     if (i % i_twist == 0)
     {
