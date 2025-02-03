@@ -8,11 +8,11 @@ auv_simulator:
     imu_publish_frequency: 50.0
     absolute_position_x_sigma: 1.0
     absolute_position_y_sigma: 1.0
-    absolute_position_z_sigma: 0.01
+    absolute_position_z_sigma: 1.0
     absolute_position_publish_frequency: 1.0
     twist_linear_sigma: 0.001
     twist_publish_frequency: 25.0
-    depth_sigma: 0.01
+    depth_sigma: 0.000001
     depth_publish_frequency: 10.0
     altitude_sigma: 0.1
     altitude_publish_frequency: 25.0
@@ -35,10 +35,10 @@ state_estimator:
         type: fuse_models::Omnidirectional3D
       non_smooth_motion_model:
         type: fuse_models::Omnidirectional3D
-      # sea_surface_motion_model:
-      #   type: fuse_models::Omnidirectional3D
-      # sea_bottom_motion_model:
-      #   type: fuse_models::Omnidirectional3D
+      sea_surface_motion_model:
+        type: fuse_models::Omnidirectional3D
+      sea_bottom_motion_model:
+        type: fuse_models::Omnidirectional3D
 
     smooth_motion_model:
       # x, y, z, roll, pitch, yaw, x_vel, y_vel, z_vel, roll_vel, pitch_vel, yaw_vel, x_acc, y_acc, z_acc
@@ -50,15 +50,15 @@ state_estimator:
       process_noise_diagonal: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
       device_name: 'base_link_non_smooth'
 
-    # sea_surface_motion_model:
-    #   # x, y, z, roll, pitch, yaw, x_vel, y_vel, z_vel, roll_vel, pitch_vel, yaw_vel, x_acc, y_acc, z_acc
-    #   process_noise_diagonal: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
-    #   device_name: 'sea_surface'
+    sea_surface_motion_model:
+      # x, y, z, roll, pitch, yaw, x_vel, y_vel, z_vel, roll_vel, pitch_vel, yaw_vel, x_acc, y_acc, z_acc
+      process_noise_diagonal: [1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9]
+      device_name: 'sea_surface'
 
-    # sea_bottom_motion_model:
-    #   # x, y, z, roll, pitch, yaw, x_vel, y_vel, z_vel, roll_vel, pitch_vel, yaw_vel, x_acc, y_acc, z_acc
-    #   process_noise_diagonal: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
-    #   device_name: 'sea_bottom'
+    sea_bottom_motion_model:
+      # x, y, z, roll, pitch, yaw, x_vel, y_vel, z_vel, roll_vel, pitch_vel, yaw_vel, x_acc, y_acc, z_acc
+      process_noise_diagonal: [1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9, 1.0e-9]
+      device_name: 'sea_bottom'
 
     sensor_models:
       initial_localization_sensor:
@@ -69,23 +69,23 @@ state_estimator:
         type: fuse_models::Omnidirectional3DIgnition
         motion_models: [non_smooth_motion_model]
         ignition: true
-      # initial_sea_surface:
-      #   type: fuse_models::Omnidirectional3DIgnition
-      #   motion_models: [sea_surface_motion_model]
-      #   ignition: true
-      # initial_sea_bottom:
-      #   type: fuse_models::Omnidirectional3DIgnition
-      #   motion_models: [sea_bottom_motion_model]
-      #   ignition: true
+      initial_sea_surface:
+        type: fuse_models::Omnidirectional3DIgnition
+        motion_models: [sea_surface_motion_model]
+        ignition: true
+      initial_sea_bottom:
+        type: fuse_models::Omnidirectional3DIgnition
+        motion_models: [sea_bottom_motion_model]
+        ignition: true
       gnss_sensor:
         type: fuse_models::Odometry3D
         motion_models: [non_smooth_motion_model]
-      # sea_surface_sensor:
-      #   type: fuse_models::Odometry3D
-      #   motion_models: [sea_surface_motion_model]
-      # sea_bottom_sensor:
-      #   type: fuse_models::Odometry3D
-      #   motion_models: [sea_bottom_motion_model]
+      sea_surface_sensor:
+        type: fuse_models::Odometry3D
+        motion_models: [sea_surface_motion_model]
+      sea_bottom_sensor:
+        type: fuse_models::Odometry3D
+        motion_models: [sea_bottom_motion_model]
       imu_sensor:
         type: fuse_models::Imu3D
         motion_models: [smooth_motion_model]
@@ -113,19 +113,19 @@ state_estimator:
       initial_sigma: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
       device_name: 'base_link_non_smooth'
 
-    # initial_sea_surface:
-    #   publish_on_startup: true
-    #   # x, y, z, roll, pitch, yaw, x_vel, y_vel, z_vel, roll_vel, pitch_vel, yaw_vel, x_acc, y_acc, z_acc
-    #   initial_state: [0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    #   initial_sigma: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
-    #   device_name: 'sea_surface'
+    initial_sea_surface:
+      publish_on_startup: true
+      # x, y, z, roll, pitch, yaw, x_vel, y_vel, z_vel, roll_vel, pitch_vel, yaw_vel, x_acc, y_acc, z_acc
+      initial_state: [0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      initial_sigma: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+      device_name: 'sea_surface'
 
-    # initial_sea_bottom:
-    #   publish_on_startup: true
-    #   # x, y, z, roll, pitch, yaw, x_vel, y_vel, z_vel, roll_vel, pitch_vel, yaw_vel, x_acc, y_acc, z_acc
-    #   initial_state: [0.0, 0.0, -5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    #   initial_sigma: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
-    #   device_name: 'sea_bottom'
+    initial_sea_bottom:
+      publish_on_startup: true
+      # x, y, z, roll, pitch, yaw, x_vel, y_vel, z_vel, roll_vel, pitch_vel, yaw_vel, x_acc, y_acc, z_acc
+      initial_state: [0.0, 0.0, -5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      initial_sigma: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+      device_name: 'sea_bottom'
 
     gnss_sensor:
       topic: 'gnss'
@@ -133,23 +133,23 @@ state_estimator:
       position_dimensions: ['x', 'y', 'z']
       device_name: 'base_link_non_smooth'
 
-    # sea_surface_sensor:
-    #   topic: 'depth'
-    #   # we only want position and orientation, but you can get a full odometry measurement from this sensor
-    #   position_dimensions: ['x', 'y', 'z']
-    #   orientation_dimensions: ['roll', 'pitch', 'yaw']
-    #   pose_target_frame: 'odom'
-    #   tf_timeout: 0.5
-    #   device_name: 'sea_surface'
+    sea_surface_sensor:
+      topic: 'depth'
+      # we only want position and orientation, but you can get a full odometry measurement from this sensor
+      position_dimensions: ['x', 'y', 'z']
+      orientation_dimensions: ['roll', 'pitch', 'yaw']
+      pose_target_frame: 'map'
+      tf_timeout: 0.5
+      device_name: 'sea_surface'
 
-    # sea_bottom_sensor:
-    #   topic: 'altitude'
-    #   # we only want position and orientation, but you can get a full odometry measurement from this sensor
-    #   position_dimensions: ['x', 'y', 'z']
-    #   orientation_dimensions: ['roll', 'pitch', 'yaw']
-    #   pose_target_frame: 'odom'
-    #   tf_timeout: 0.5
-    #   device_name: 'sea_bottom'
+    sea_bottom_sensor:
+      topic: 'altitude'
+      # we only want position and orientation, but you can get a full odometry measurement from this sensor
+      position_dimensions: ['x', 'y', 'z']
+      orientation_dimensions: ['roll', 'pitch', 'yaw']
+      pose_target_frame: 'map'
+      tf_timeout: 0.5
+      device_name: 'sea_bottom'
 
     imu_sensor:
       topic: 'imu'
@@ -185,10 +185,10 @@ state_estimator:
         type: fuse_models::Odometry3DPublisher
       non_smooth_filtered_publisher:
         type: fuse_models::Odometry3DPublisher
-      # sea_surface_publisher:
-      #   type: fuse_models::Odometry3DPublisher
-      # sea_bottom_publisher:
-      #   type: fuse_models::Odometry3DPublisher
+      sea_surface_publisher:
+        type: fuse_models::Odometry3DPublisher
+      sea_bottom_publisher:
+        type: fuse_models::Odometry3DPublisher
 
     # the configuration of our output publisher
     filtered_publisher:
@@ -201,7 +201,7 @@ state_estimator:
       navigation_frame_id: 'base_link_nav'
       publish_tf: true
       publish_nav_tf: true
-      publish_frequency: 10.0
+      publish_frequency: 20.0
       device_name: 'base_link'
     non_smooth_filtered_publisher:
       topic: 'map_filtered'
@@ -211,25 +211,25 @@ state_estimator:
       map_frame_id: 'map'
       world_frame_id: 'map'
       publish_tf: true
-      publish_frequency: 10.0
+      publish_frequency: 20.0
       device_name: 'base_link_non_smooth'
-    # sea_surface_publisher:
-    #   topic: 'sea_surface_filtered'
-    #   base_link_output_frame_id: 'sea_surface'
-    #   base_link_frame_id: 'sea_surface'
-    #   odom_frame_id: 'odom'
-    #   map_frame_id: 'map'
-    #   world_frame_id: 'odom'
-    #   publish_tf: true
-    #   publish_frequency: 10.0
-    #   device_name: 'sea_surface'
-    # sea_bottom_publisher:
-    #   topic: 'sea_bottom_filtered'
-    #   base_link_output_frame_id: 'sea_bottom'
-    #   base_link_frame_id: 'sea_bottom'
-    #   odom_frame_id: 'odom'
-    #   map_frame_id: 'map'
-    #   world_frame_id: 'odom'
-    #   publish_tf: true
-    #   publish_frequency: 10.0
-    #   device_name: 'sea_bottom'
+    sea_surface_publisher:
+      topic: 'sea_surface_filtered'
+      base_link_output_frame_id: 'sea_surface'
+      base_link_frame_id: 'sea_surface'
+      odom_frame_id: 'odom'
+      map_frame_id: 'map'
+      world_frame_id: 'odom'
+      publish_tf: true
+      publish_frequency: 20.0
+      device_name: 'sea_surface'
+    sea_bottom_publisher:
+      topic: 'sea_bottom_filtered'
+      base_link_output_frame_id: 'sea_bottom'
+      base_link_frame_id: 'sea_bottom'
+      odom_frame_id: 'odom'
+      map_frame_id: 'map'
+      world_frame_id: 'odom'
+      publish_tf: true
+      publish_frequency: 20.0
+      device_name: 'sea_bottom'
