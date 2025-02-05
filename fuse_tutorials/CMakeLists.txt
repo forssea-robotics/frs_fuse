@@ -56,6 +56,9 @@ target_link_libraries(underwater_simulator ${PROJECT_NAME})
 add_executable(apriltag_simulator src/apriltag_simulator.cpp)
 target_link_libraries(apriltag_simulator ${PROJECT_NAME})
 
+add_executable(auv_simulator src/auv_simulator.cpp)
+target_link_libraries(auv_simulator ${PROJECT_NAME})
+
 # ##############################################################################
 # Install ##
 # ##############################################################################
@@ -73,6 +76,7 @@ install(TARGETS range_sensor_simulator DESTINATION lib/${PROJECT_NAME})
 install(TARGETS three_dimensional_simulator DESTINATION lib/${PROJECT_NAME})
 install(TARGETS underwater_simulator DESTINATION lib/${PROJECT_NAME})
 install(TARGETS apriltag_simulator DESTINATION lib/${PROJECT_NAME})
+install(TARGETS auv_simulator DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY launch config data DESTINATION share/${PROJECT_NAME})
 

@@ -36,8 +36,8 @@ def generate_launch_description():
             # run our simulator
             Node(
                 package="fuse_tutorials",
-                executable="three_dimensional_simulator",
-                name="three_dimensional_simulator",
+                executable="auv_simulator",
+                name="auv_simulator",
                 output="screen",
             ),
             # run our estimator
@@ -45,10 +45,9 @@ def generate_launch_description():
                 package="fuse_optimizers",
                 executable="fixed_lag_smoother_node",
                 name="state_estimator",
+                output="screen",
                 parameters=[
-                    PathJoinSubstitution(
-                        [pkg_dir, "config", "fuse_3d_twist_tutorial.yaml"]
-                    )
+                    PathJoinSubstitution([pkg_dir, "config", "auv_tutorial.yaml"])
                 ],
             ),
             # run visualization
@@ -58,11 +57,7 @@ def generate_launch_description():
                 name="rviz",
                 arguments=[
                     "-d",
-                    [
-                        PathJoinSubstitution(
-                            [pkg_dir, "config", "fuse_3d_tutorial.rviz"]
-                        )
-                    ],
+                    [PathJoinSubstitution([pkg_dir, "config", "auv_tutorial.rviz"])],
                 ],
             ),
         ]

@@ -74,6 +74,8 @@ public:
       const std::string& ns)
   {
     publish_tf = fuse_core::getParam(interfaces, fuse_core::joinParameterName(ns, "publish_tf"), publish_tf);
+    publish_nav_tf =
+        fuse_core::getParam(interfaces, fuse_core::joinParameterName(ns, "publish_nav_tf"), publish_nav_tf);
     invert_tf = fuse_core::getParam(interfaces, fuse_core::joinParameterName(ns, "invert_tf"), invert_tf);
     predict_to_future =
         fuse_core::getParam(interfaces, fuse_core::joinParameterName(ns, "predict_to_future"), predict_to_future);
@@ -110,6 +112,8 @@ public:
         interfaces, fuse_core::joinParameterName(ns, "base_link_output_frame_id"), base_link_output_frame_id);
     world_frame_id =
         fuse_core::getParam(interfaces, fuse_core::joinParameterName(ns, "world_frame_id"), world_frame_id);
+    navigation_frame_id =
+        fuse_core::getParam(interfaces, fuse_core::joinParameterName(ns, "navigation_frame_id"), navigation_frame_id);
 
     const bool frames_valid = map_frame_id != odom_frame_id && map_frame_id != base_link_frame_id &&
                               map_frame_id != base_link_output_frame_id && odom_frame_id != base_link_frame_id &&
@@ -136,12 +140,13 @@ public:
     fuse_core::loadCovarianceOptionsFromROS(interfaces, covariance_options, "covariance_options");
   }
 
-  bool publish_tf{ true };  //!< Whether to publish/broadcast the TF transform or not
-  bool invert_tf{ false };  //!< Whether to broadcast the inverse of the TF transform or not. When
-                            //!< the inverse is broadcasted, the transform is inverted and the
-                            //!< header.frame_id and child_frame_id are swapped, i.e. the odometry
-                            //!< output header.frame_id is set to the base_link_output_frame_id and
-                            //!< the child_frame_id to the world_frame_id
+  bool publish_tf{ true };       //!< Whether to publish/broadcast the TF transform or not
+  bool publish_nav_tf{ false };  //!< Whether to publish/broadcast the navigation frame TF transform or not
+  bool invert_tf{ false };       //!< Whether to broadcast the inverse of the TF transform or not. When
+                                 //!< the inverse is broadcasted, the transform is inverted and the
+                                 //!< header.frame_id and child_frame_id are swapped, i.e. the odometry
+                                 //!< output header.frame_id is set to the base_link_output_frame_id and
+                                 //!< the child_frame_id to the world_frame_id
   bool predict_to_current_time{ false };
   bool predict_with_acceleration{ false };
   double publish_frequency{ 10.0 };
@@ -157,6 +162,7 @@ public:
   std::string map_frame_id{ "map" };
   std::string odom_frame_id{ "odom" };
   std::string base_link_frame_id{ "base_link" };
+  std::string navigation_frame_id{ "base_link_nav" };
   std::string base_link_output_frame_id{ base_link_frame_id };
   std::string world_frame_id{ odom_frame_id };
   std::string topic{ "odometry/filtered" };
