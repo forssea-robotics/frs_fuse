@@ -65,9 +65,9 @@ constexpr char seaSurfaceFrame[] =
     "sea_surface";  //!< The sea surface is defined by a pressure sensor, and will be placed
                     //!< above the base_link frame, with a z offset and a null orientation
 constexpr char seaBottomFrame[] =
-    "sea_bottom";                               //!< The sea surface is defined by a pressure sensor, and will be placed
-                                                //!< above the base_link frame, with a z offset and a null orientation
-constexpr char odomFrame[] = "odom";            //!< The odom frame id used when publishing wheel
+    "sea_bottom";                     //!< The sea surface is defined by a pressure sensor, and will be placed
+                                      //!< above the base_link frame, with a z offset and a null orientation
+constexpr char odomFrame[] = "odom";  //!< The odom frame id used when publishing wheel
 
 double imuOrientationRollPitchSigma = 0.001;  //!< Std dev of simulated Imu measurement noise
 double imuOrientationYawSigma = 0.001;        //!< Std dev of simulated Imu measurement noise
@@ -80,8 +80,8 @@ double twistLinearSigma = 0.001;              //!< Std dev of simulated twist me
 double depthSigma = 0.001;                    //!< Std dev of simulated depth measurement noise
 double altitudeSigma = 0.001;                 //!< Std dev of simulated altitude measurement noise
 
-double seaSurfaceHeight = 5.;                 //!< The sea surface is 10 meters above the ellipsoid surface
-double seaBottomHeight = -5.;                 //!< The sea bottom is 10 meters below the ellipsoid surface
+double seaSurfaceHeight = 5.;  //!< The sea surface is 10 meters above the ellipsoid surface
+double seaBottomHeight = -5.;  //!< The sea bottom is 10 meters below the ellipsoid surface
 
 double x_amplitude = 5.0;  //!< The amplitude of the x trajectory
 double y_amplitude = 5.0;  //!< The amplitude of the y trajectory
@@ -416,14 +416,15 @@ int main(int argc, char** argv)
 {
   // set up our ROS node
   rclcpp::init(argc, argv);
-  auto node = rclcpp::Node::make_shared("auv_simulator", rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true));
+  auto node = rclcpp::Node::make_shared("auv_simulator",
+                                        rclcpp::NodeOptions().automatically_declare_parameters_from_overrides(true));
 
   const double max_freq = 100.0;
-  double imu_publish_frequency=100.0;
-  double absolute_position_publish_frequency=100.0;
-  double twist_publish_frequency=100.0;
-  double depth_publish_frequency=100.0;
-  double altitude_publish_frequency=100.0;
+  double imu_publish_frequency = 100.0;
+  double absolute_position_publish_frequency = 100.0;
+  double twist_publish_frequency = 100.0;
+  double depth_publish_frequency = 100.0;
+  double altitude_publish_frequency = 100.0;
 
   // get the parameters
   node->get_parameter_or<double>("imu_orientation_roll_pitch_sigma", imuOrientationRollPitchSigma,

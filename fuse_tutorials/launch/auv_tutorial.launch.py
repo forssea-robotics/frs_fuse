@@ -41,7 +41,7 @@ def generate_launch_description():
                 output="screen",
                 parameters=[
                     PathJoinSubstitution([pkg_dir, "config", "auv_tutorial.yaml"])
-                ]
+                ],
             ),
             # run our estimator
             Node(
